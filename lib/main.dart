@@ -1,58 +1,34 @@
 import 'package:flutter/material.dart';
+import 'moments_list_page.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const StudentApp());
 }
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+
+class StudentApp extends StatelessWidget {
+  const StudentApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: '时光水库',
-      home: Scaffold(
-        backgroundColor: const Color(0xffc8d6e5), // 设置背景颜色
-        body: const MyHomePage(),
-        appBar: AppBar( //导航栏
-          leading:IconButton(icon: const Icon(Icons.list), onPressed: () {}),
-          title: const Text("TimeReservoir"),
-          actions: <Widget>[ //导航栏右侧菜单
-            IconButton(icon: const Icon(Icons.calendar_month_outlined), onPressed:() {}),
-            IconButton(icon: const Icon(Icons.search), onPressed:() {}),
-            IconButton(icon: const Icon(Icons.add), onPressed:() {}),
-          ],
-        ),
+      title: 'Moments Information',
+      theme: ThemeData(
+        primarySwatch: Colors.grey,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
+      debugShowCheckedModeBanner: false,
+      home: const HomePage(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget{
-  const MyHomePage({super.key});
-  @override
-  State<MyHomePage> createState()=>_MyHomePageState();
-}
-
-
-class _MyHomePageState extends State<MyHomePage> {
-  var str=0;
-
-  void addOnPressed(){
-    setState(() {
-      str++;
-    });
-  }
+class HomePage extends StatelessWidget {
+  const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            IconButton(icon: const Icon(Icons.add), onPressed: addOnPressed),
-            Text("$str"),
-          ],
-        )
-      );
+    return const Scaffold(
+      body: MomentsListPage()
+    );
   }
 }
