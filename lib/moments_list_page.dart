@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'database_helper.dart';
 import 'moments_form_page.dart';
@@ -6,10 +9,10 @@ class MomentsListPage extends StatefulWidget {
   const MomentsListPage({super.key});
 
   @override
-  State<MomentsListPage> createState() => _StudentListPageState();
+  State<MomentsListPage> createState() => _MomentsListPage();
 }
 
-class _StudentListPageState extends State<MomentsListPage> {
+class _MomentsListPage extends State<MomentsListPage> {
   List<Map<String, dynamic>> moments = [];
 
   _refreshMoments() async {
@@ -48,7 +51,7 @@ class _StudentListPageState extends State<MomentsListPage> {
         ],
       ),
       body: moments.isEmpty
-          ? const Center(child: Text('No moments available', style: TextStyle(fontSize: 18)))
+          ? const Center(child: Text('这里啥也没有', style: TextStyle(fontSize: 18)))
           : ListView.builder(
         itemCount: moments.length,
         itemBuilder: (context, index) => Card(
@@ -61,21 +64,21 @@ class _StudentListPageState extends State<MomentsListPage> {
                 context: context,
                 builder: (BuildContext context) {
                   return AlertDialog(
-                    title: const Text('Confirm'),
-                    content: const Text('Are you sure you want to delete this item?'),
-                    actions: <Widget>[
+                    title: const Text('确认'),
+                    content: const Text('你确定想要删除这一条吗？'),
+                    actions: [
                       TextButton(
                         onPressed: () => Navigator.of(context).pop(false), // 取消删除
-                        child: const Text('CANCEL'),
+                        child: const Text('删除'),
                       ),
                       TextButton(
                         onPressed: () {
                           _deleteMoments(moments[index]['id']);
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Moments deleted')),
+                            const SnackBar(content: Text('Moments 删除')),
                           );
                           Navigator.of(context).pop(true);}, // 确认删除
-                        child: const Text('DELETE'),
+                        child: const Text('删除'),
                       ),
                     ],
                   );
@@ -91,16 +94,72 @@ class _StudentListPageState extends State<MomentsListPage> {
             child: Material(
               elevation: 10.0,
               shadowColor: Colors.blueGrey,
-              child: ListTile(
-                contentPadding: const EdgeInsets.all(16),
-                title: Text(
-                  moments[index]['texts'],
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                subtitle: Text('${moments[index]['time']}'),
-                onTap: () => Navigator.push(context, MaterialPageRoute(
-                  builder: (context) => MomentsFormPage(moments: moments[index]),
-                )).then((_) => _refreshMoments()),
+              child: Column(
+                children: [
+                  ListTile(
+                    contentPadding: const EdgeInsets.all(16),
+                    title: Text(
+                      moments[index]['texts'],
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Text('${moments[index]['time']}'),
+                    onTap: () => Navigator.push(context, MaterialPageRoute(
+                      builder: (context) => MomentsFormPage(moments: moments[index]),
+                    )).then((_) => _refreshMoments()),
+                  ),
+                  moments[index]['pictures'].isEmpty? const Padding(padding: EdgeInsets.all(0)) :
+                  SizedBox(
+                    height: (40 * moments[index]['pictures']?.split(',').length).toDouble(),
+                    child: GridView.builder(
+                      padding: const EdgeInsets.all(8.0),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 3, // 每行显示3个图片
+                        crossAxisSpacing: 8.0,
+                        mainAxisSpacing: 8.0,
+                      ),
+                      itemCount: moments[index]['pictures']?.split(',').length ?? 0,
+                      itemBuilder: (context, index_) {
+                        // 定义一个变量来存储图片文件
+                        final imageFile = File(moments[index]['pictures'].split(',')[index_]);
+                        // 异步获取图片尺寸
+                        Future<Size> getImageSize() async {
+                          final image = Image.file(imageFile);
+                          final Completer<Size> completer = Completer();
+                          image.image.resolve(ImageConfiguration.empty).addListener(
+                            ImageStreamListener(
+                                  (ImageInfo info, bool _) {
+                                completer.complete(Size(info.image.width.toDouble(), info.image.height.toDouble()));
+                              },
+                            ),
+                          );
+                          return completer.future;
+                        }
+                        return FutureBuilder<Size>(
+                          future: getImageSize(),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState == ConnectionState.done && snapshot.hasData) {
+                              // 获取缩放后的尺寸
+                              final Size size = snapshot.data!;
+                              final int cacheWidth = (size.width / 4).toInt();
+                              final int cacheHeight = (size.height / 4).toInt();
+
+                              // 返回缩放后的图片
+                              return Image.file(
+                                imageFile,
+                                fit: BoxFit.cover,
+                                cacheWidth: cacheWidth,
+                                cacheHeight: cacheHeight,
+                              );
+                            } else {
+                              // 图片尺寸正在加载，显示占位符
+                              return const Placeholder();
+                            }
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
