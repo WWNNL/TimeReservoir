@@ -24,7 +24,7 @@ class _StudentFormPageState extends State<MomentsFormPage> {
     super.initState();
     if (widget.moments != null) {
       textController.text = widget.moments!['texts'];
-      _imagePaths = widget.moments!['pictures'];
+      _imagePaths = widget.moments!['pictures'].split(',');
     }
   }
 
@@ -172,7 +172,7 @@ class _ImageGridState extends State<ImageGrid> {
           ],
         ),
         SizedBox(
-          height: _imageFiles?.length.toDouble()==null?300:_imageFiles!.length.toDouble()*40,
+          height: _imageFiles?.length.toDouble()==null?40:(_imageFiles!.length.toDouble()/3.floor()+1)*100,
           child: GridView.builder(
             padding: const EdgeInsets.all(8.0),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(

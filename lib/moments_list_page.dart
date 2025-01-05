@@ -109,7 +109,7 @@ class _MomentsListPage extends State<MomentsListPage> {
                   ),
                   moments[index]['pictures'].isEmpty? const Padding(padding: EdgeInsets.all(0)) :
                   SizedBox(
-                    height: (40 * moments[index]['pictures']?.split(',').length).toDouble(),
+                    height: ((moments[index]['pictures']?.split(',').length/3.floor()+1)*95).toDouble(),
                     child: GridView.builder(
                       padding: const EdgeInsets.all(8.0),
                       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
