@@ -26,7 +26,6 @@ class DatabaseHelper {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         time TEXT,
         texts TEXT,
-        pictures TEXT
       )
     ''');
   }
