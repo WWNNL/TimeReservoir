@@ -1,6 +1,7 @@
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'dart:math';
 import 'dart:io';
 
 class ShowPictures extends StatefulWidget {
@@ -13,6 +14,10 @@ class ShowPictures extends StatefulWidget {
 }
 
 class _ShowPictures extends State<ShowPictures> {
+  // 维护四列的图片数据和高度信息
+  final List<List<String>> _columns = [[], [], [], []];
+  final List<double> _columnHeights = [0, 0, 0, 0];
+  final double _spacing = 0.0;
   late List<String> imagePaths;
 
   @override
@@ -20,50 +25,68 @@ class _ShowPictures extends State<ShowPictures> {
     super.initState();
     imagePaths=widget.imagePathsStr.split(',');
     requestStoragePermission();
+    _distributeImages();
+  }
+  
+  // 动态分配图片到最短列
+  void _distributeImages() {
+    for (var path in widget.imagePathsStr.split(',')) {
+      // 找到当前最矮的列
+      int shortestIndex = _columnHeights.indexOf(_columnHeights.reduce(min));
+      _columns[shortestIndex].add(path);
+
+      // 假设图片高度（占位计算，实际需要异步获取后更新）
+      _columnHeights[shortestIndex] += 200; // 初始预估高度
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final maxWidth = constraints.maxWidth;
-        // 计算每行最多显示4个图片时的单个图片宽度
-        final itemWidth = (maxWidth - 3 * 4) / 4; // 4个图片有3个间距
-        return Wrap(
-          spacing: 4.0, // 水平间距
-          runSpacing: 4.0, // 垂直间距
-          children: imagePaths.map((path) {
-            return FutureBuilder(
+        final columnWidth = (constraints.maxWidth - 3 * _spacing) / 4;
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: List.generate(4, (index) {
+            return _buildImageColumn(columnWidth, _columns[index]);
+          }),
+        );
+      },
+    );
+  }
+
+  Widget _buildImageColumn(double width, List<String> paths) {
+    return SizedBox(
+      width: width,
+      child: Column(
+        children: [
+          for (var path in paths)
+            FutureBuilder(
               future: _getImageSize(path),
-              builder: (context, AsyncSnapshot<Size> snapshot) {
-                // 统一占位符尺寸（保持与实际图片相同布局）
-                final placeholder = SizedBox(
-                  width: itemWidth,
-                  height: itemWidth, // 默认正方形占位
-                  child: Container(color: Colors.grey),
-                );
-                if (!snapshot.hasData || snapshot.connectionState != ConnectionState.done) {
-                  return placeholder;
-                }
-                final Size size = snapshot.data!;
-                final aspectRatio = size.width / size.height;
-                return SizedBox(
-                  width: itemWidth,
-                  height: itemWidth / aspectRatio,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: Image.file(
+              builder: (context, snapshot) {
+                final itemHeight = snapshot.hasData
+                    ? (width * snapshot.data!.height / snapshot.data!.width)
+                    : width; // 默认正方形占位
+                return Padding(
+                  padding: EdgeInsets.only(bottom: _spacing),
+                  child: Container(
+                    width: width,
+                    height: itemHeight,
+                    color: Colors.grey[300],
+                    child: snapshot.hasData
+                        ? Image.file(
                       File(path),
-                      fit: BoxFit.cover, // 填充容器并保持比例
-                      cacheWidth: (itemWidth * WidgetsBinding.instance.window.devicePixelRatio).round(),
-                    ),
+                      fit: BoxFit.cover,
+                      cacheWidth: (width * MediaQuery.of(context).devicePixelRatio).round(),
+                    )
+                        : const Center(child: CircularProgressIndicator()),
                   ),
                 );
               },
-            );
-          }).toList(),
-        );
-      },
+            )
+        ],
+      ),
     );
   }
 
