@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:time_reservoir/show_pictures.dart';
 import 'database_helper.dart';
 import 'moments_form_page.dart';
+// import 'show_pictures.dart';
 
 class MomentsListPage extends StatefulWidget {
   const MomentsListPage({super.key});
@@ -11,6 +13,7 @@ class MomentsListPage extends StatefulWidget {
 
 class _MomentsListPage extends State<MomentsListPage> {
   List<Map<String, dynamic>> moments = [];
+  // final String _imagePaths="/storage/emulated/0/DCIM/Camera/IMG_20210504_192454_1.jpg"; // 用于存储图片路径
 
   _refreshMoments() async {
     final data = await DatabaseHelper().getAll();
@@ -104,6 +107,9 @@ class _MomentsListPage extends State<MomentsListPage> {
                       builder: (context) => MomentsFormPage(moments: moments[index]),
                     )).then((_) => _refreshMoments()),
                   ),
+                  moments[index]['pictures']==null?Padding(padding: EdgeInsets.all(0)):
+                  ShowPictures(imagePathsStr: moments[index]['pictures']),
+                  Padding(padding: EdgeInsets.all(3))
                 ],
               ),
             ),

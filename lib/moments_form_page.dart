@@ -1,5 +1,7 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'database_helper.dart';
+import 'show_pictures.dart';
 
 class MomentsFormPage extends StatefulWidget {
   final Map<String, dynamic>? moments;
@@ -13,22 +15,35 @@ class MomentsFormPage extends StatefulWidget {
 class _StudentFormPageState extends State<MomentsFormPage> {
   final _formKey = GlobalKey<FormState>();
   TextEditingController textController = TextEditingController();
+  String? _imagePaths; // 用于存储图片路径
 
   @override
   void initState() {
     super.initState();
     if (widget.moments != null) {
       textController.text = widget.moments!['texts'];
+      _imagePaths = widget.moments!['pictures'].split(',');
+    }
+  }
+
+  _selectImage() async{
+    FilePickerResult? result = await FilePicker.platform.pickFiles(allowMultiple: true);
+    if (result != null) {
+      setState(() {
+        _imagePaths=result.files.single.path;
+      });
     }
   }
 
   _saveMoments() async {
     if (_formKey.currentState!.validate()) {
       DateTime dateTime = DateTime.now();
+      String? pictures = _imagePaths;
 
       Map<String, dynamic> moments = {
         'texts': textController.text,
         'time': dateTime.toString().substring(0, 19),
+        'pictures': pictures, // 保存逗号分隔的图片路径字符串
       };
 
       if (widget.moments == null) {
@@ -98,6 +113,27 @@ class _StudentFormPageState extends State<MomentsFormPage> {
                   },
                 ),
                 const Padding(padding: EdgeInsets.all(2)),
+                Row(
+                  children: [
+                    ElevatedButton(
+                      onPressed: _selectImage,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey.shade400, // Customize button color
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(0), // Rounded corners for the button
+                        ),
+                      ),
+                      child: const Text('选择图片',
+                        style: TextStyle(
+                            fontSize: 15,
+                            color: Colors.black
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                _imagePaths?[0]==null?Text(" "):
+                ShowPictures(imagePathsStr: _imagePaths!)
               ],
             ),
           ),
