@@ -24,36 +24,46 @@ class _ShowPictures extends State<ShowPictures> {
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 4.0, // 图片之间的水平间距
-      runSpacing: 4.0, // 图片之间的垂直间距
-      children: imagePaths.map((path) {
-        return FutureBuilder(
-          future: _getImageSize(path),
-          builder: (BuildContext context, AsyncSnapshot<Size> snapshot) {
-            if (snapshot.connectionState == ConnectionState.done && snapshot.hasData) {
-              // 图片加载完成，获取到尺寸
-              Size size = snapshot.data!;
-              double scalingSize=0.08;
-              return SizedBox(
-                width: size.width*scalingSize, // 使用图片的原始宽度
-                height: size.height*scalingSize, // 使用图片的原始高度
-                child: Image.file(
-                    File(path),
-                    fit: BoxFit.cover
-                )
-              );
-            } else {
-              // 图片正在加载，可以显示一个占位符
-              return Container(
-                width: 100, // 占位符宽度
-                height: 100, // 占位符高度
-                color: Colors.grey, // 占位符颜色
-              );
-            }
-          },
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final maxWidth = constraints.maxWidth;
+        // 计算每行最多显示4个图片时的单个图片宽度
+        final itemWidth = (maxWidth - 3 * 4) / 4; // 4个图片有3个间距
+        return Wrap(
+          spacing: 4.0, // 水平间距
+          runSpacing: 4.0, // 垂直间距
+          children: imagePaths.map((path) {
+            return FutureBuilder(
+              future: _getImageSize(path),
+              builder: (context, AsyncSnapshot<Size> snapshot) {
+                // 统一占位符尺寸（保持与实际图片相同布局）
+                final placeholder = SizedBox(
+                  width: itemWidth,
+                  height: itemWidth, // 默认正方形占位
+                  child: Container(color: Colors.grey),
+                );
+                if (!snapshot.hasData || snapshot.connectionState != ConnectionState.done) {
+                  return placeholder;
+                }
+                final Size size = snapshot.data!;
+                final aspectRatio = size.width / size.height;
+                return SizedBox(
+                  width: itemWidth,
+                  height: itemWidth / aspectRatio,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: Image.file(
+                      File(path),
+                      fit: BoxFit.cover, // 填充容器并保持比例
+                      cacheWidth: (itemWidth * WidgetsBinding.instance.window.devicePixelRatio).round(),
+                    ),
+                  ),
+                );
+              },
+            );
+          }).toList(),
         );
-      }).toList(),
+      },
     );
   }
 

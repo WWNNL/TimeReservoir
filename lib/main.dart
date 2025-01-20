@@ -4,6 +4,7 @@ import 'moments_list_page.dart';
 void main() {
   WidgetsFlutterBinding.ensureInitialized(); // 确保 Flutter 绑定已初始化
   runApp(const StudentApp());
+
 }
 
 class StudentApp extends StatelessWidget {
