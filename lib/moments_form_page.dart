@@ -22,15 +22,20 @@ class _StudentFormPageState extends State<MomentsFormPage> {
     super.initState();
     if (widget.moments != null) {
       textController.text = widget.moments!['texts'];
-      _imagePaths = widget.moments!['pictures'].split(',');
+      _imagePaths = widget.moments!['pictures'];
     }
   }
 
   _selectImage() async{
-    FilePickerResult? result = await FilePicker.platform.pickFiles(allowMultiple: true);
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      allowMultiple: true,
+      type: FileType.custom,
+      allowedExtensions: ['jpg', 'png', 'jpeg'],
+    );
     if (result != null) {
       setState(() {
-        _imagePaths=result.files.single.path;
+        List<String> filePaths = result.paths.map((path) => path!).toList();
+        _imagePaths=filePaths.join(',');
       });
     }
   }
